@@ -36,17 +36,17 @@ function initSocketServer(httpServer) {
   io.on("connection", async (socket) => {
     console.log("a user connected");
 
-    socket.on("ai-message", async (data) => {
-      const message = await messageModel.create({
+    socket.on("ai-message", async (data) => {  //listening to ai-message event
+      const message = await messageModel.create({  //creating message in mongodb
         user: socket.user._id,
         chat: data.chat,
         content: data.content,
         role: "user",
       });
 
-      const vector = await aiService.generateVectors(data.content);
+      const vector = await aiService.generateVectors(data.content);  //generating vector for user message
 
-      await vectorService.createMemory({
+      await vectorService.createMemory({   //creating memory in pinecone with adding vector and metadata
         messageId: message._id,
         vector: vector,
         metadata: {
@@ -56,7 +56,7 @@ function initSocketServer(httpServer) {
         },
       });
 
-      const chatHistory = (
+      const chatHistory = (  //fetching chat history(for STM)
         await messageModel
           .find({
             chat: data.chat,
@@ -66,7 +66,7 @@ function initSocketServer(httpServer) {
           .lean()
       ).reverse();
 
-      const response = await aiService.generateAIResponse(
+      const response = await aiService.generateAIResponse(  //generating response from AI
         chatHistory.map((message) => {
           return {
             role: message.role,
@@ -75,31 +75,32 @@ function initSocketServer(httpServer) {
         })
       );
 
-      const responseMessage = await messageModel.create({
+      const responseMessage = await messageModel.create({  //creating response message in mongodb
         user: socket.user._id,
         chat: data.chat,
         content: response,
         role: "model",
       });
 
-      await vectorService.createMemory({
+      const responseVector = await aiService.generateVectors(response);  //generating vector for AI response
+
+      await vectorService.createMemory({  //creating memory in pinecone with adding vector and metadata
         messageId: responseMessage._id,
-        vector: vector,
+        vector: responseVector,
         metadata: {
           chat: responseMessage.chat,
           user: socket.user._id,
           message: responseMessage.content,
         },
       });
-
-      const memory = await vectorService.queryMemory({
-        vector: vector,
-        limit: 3,
-        metadata: {},
-      });
-      console.log(memory);
-
-
+      
+      // const memory = await vectorService.queryMemory({
+      //   vector: vector,
+      //   limit: 3,
+      //   metadata: {},
+      // });
+      // console.log(memory);
+      
       socket.emit("ai-response", responseMessage.content);
     });
 
