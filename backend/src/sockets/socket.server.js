@@ -3,6 +3,7 @@ const { Server } = require("socket.io");
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const aiService = require("../services/ai.service");
+const vectorService = require("../services/vector.service");
 const userModel = require("../models/user.model");
 const messageModel = require("../models/message.model");
 
@@ -13,7 +14,8 @@ function initSocketServer(httpServer) {
     },
   });
 
-  io.use(async (socket, next) => {  //middleware
+  io.use(async (socket, next) => {
+    //middleware
     const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
 
     if (!cookies) {
@@ -42,9 +44,27 @@ function initSocketServer(httpServer) {
         role: "user",
       });
 
-      const chatHistory = await messageModel.find({
-        chat: data.chat,
+      const vector = await aiService.generateVectors(data.content);
+
+      await vectorService.createMemory({
+        messageId: message._id,
+        vector: vector,
+        metadata: {
+          chat: message.chat,
+          user: socket.user._id,
+          message: message.content,
+        },
       });
+
+      const chatHistory = (
+        await messageModel
+          .find({
+            chat: data.chat,
+          })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean()
+      ).reverse();
 
       const response = await aiService.generateAIResponse(
         chatHistory.map((message) => {
@@ -61,6 +81,24 @@ function initSocketServer(httpServer) {
         content: response,
         role: "model",
       });
+
+      await vectorService.createMemory({
+        messageId: responseMessage._id,
+        vector: vector,
+        metadata: {
+          chat: responseMessage.chat,
+          user: socket.user._id,
+          message: responseMessage.content,
+        },
+      });
+
+      const memory = await vectorService.queryMemory({
+        vector: vector,
+        limit: 3,
+        metadata: {},
+      });
+      console.log(memory);
+
 
       socket.emit("ai-response", responseMessage.content);
     });
