@@ -18,7 +18,7 @@ async function queryMemory({ vector, limit, metadata }) {
   const data = await bubbleAIIndex.query({
     vector: vector,
     topK: limit,
-    filter: metadata ? { metadata } : undefined,
+    filter: metadata || undefined,
     includeMetadata: true,
   });
   return data.matches;

@@ -52,7 +52,7 @@ function initSocketServer(httpServer) {
         vector: vector,
         limit: 3,
         metadata: {
-          // user: socket.user._id
+          user: socket.user._id
         },
       });
 
@@ -90,9 +90,19 @@ function initSocketServer(httpServer) {
           role: "user",
           parts: [
             {
-              text: `these are some previous messages from the chat, use them to generate response
-            ${memory.map((message) => message.metadata.message).join("\n")}
-            `,
+              text: `Here are previous chat messages.
+                Use this memory to understand the user's context, preferences, and communication style.
+                Only use information that is relevant to the user's current query.
+
+                Previous chat history:
+                ${memory.map((message) => `${message.metadata.message}`).join("\n")}
+
+                When generating your next response:
+                - Refer to the past messages to stay consistent.
+                - Preserve any ongoing context, preferences, or tone.
+                - Do not repeat the same past messages; instead, build upon them naturally.
+                - If something from the memory seems outdated or irrelevant, ignore it.
+              `,
             },
           ],
         },
