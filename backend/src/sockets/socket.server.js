@@ -62,7 +62,7 @@ function initSocketServer(httpServer) {
               chat: data.chat,
             })
             .sort({ createdAt: -1 })
-            .limit(10)
+            .limit(20)
             .lean()
         ).reverse(),
       ]);
