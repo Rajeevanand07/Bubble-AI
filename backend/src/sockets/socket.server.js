@@ -37,24 +37,35 @@ function initSocketServer(httpServer) {
     console.log("a user connected");
 
     socket.on("ai-message", async (data) => {
-      //listening to ai-message event
-      const message = await messageModel.create({
-        //creating message in mongodb
-        user: socket.user._id,
-        chat: data.chat,
-        content: data.content,
-        role: "user",
-      });
 
-      const vector = await aiService.generateVectors(data.content); //generating vector for user message
+      const [message, vector] = await Promise.all([
+        messageModel.create({
+          //creating message in mongodb
+          user: socket.user._id,
+          chat: data.chat,
+          content: data.content,
+          role: "user",
+        }),
+        aiService.generateVectors(data.content), //generating vectors of the user message
+      ]);
 
-      const memory = await vectorService.queryMemory({
-        vector: vector,
-        limit: 3,
-        metadata: {
-          user: socket.user._id
-        },
-      });
+      const [memory, chatHistory] = await Promise.all([
+        vectorService.queryMemory({  //getting(querying) from the LTM
+          vector: vector,
+          limit: 3,
+          metadata: {
+            user: socket.user._id,
+          },
+        }),
+        (await messageModel  //getting data from mongoDB(STM)
+            .find({
+              chat: data.chat,
+            })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean()
+        ).reverse(),
+      ]);
 
       await vectorService.createMemory({
         //creating memory in pinecone with adding vector and metadata
@@ -66,17 +77,6 @@ function initSocketServer(httpServer) {
           message: message.content,
         },
       });
-
-      const chatHistory = //fetching chat history(for STM)
-      (
-        await messageModel
-          .find({
-            chat: data.chat,
-          })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .lean()
-      ).reverse();
 
       const smt = chatHistory.map((message) => {
         return {
@@ -95,7 +95,9 @@ function initSocketServer(httpServer) {
                 Only use information that is relevant to the user's current query.
 
                 Previous chat history:
-                ${memory.map((message) => `${message.metadata.message}`).join("\n")}
+                ${memory
+                  .map((message) => `${message.metadata.message}`)
+                  .join("\n")}
 
                 When generating your next response:
                 - Refer to the past messages to stay consistent.
@@ -108,9 +110,12 @@ function initSocketServer(httpServer) {
         },
       ];
 
-      const response = await aiService
-        .generateAIResponse //generating response from AI
-        ([...ltm, ...smt]);
+      const response = await aiService.generateAIResponse(
+        //generating response from AI
+        [...ltm, ...smt]
+      );
+
+      socket.emit("ai-response", response);
 
       const responseMessage = await messageModel.create({
         //creating response message in mongodb
@@ -132,8 +137,6 @@ function initSocketServer(httpServer) {
           message: responseMessage.content,
         },
       });
-
-      socket.emit("ai-response", responseMessage.content);
     });
 
     socket.on("disconnect", () => {
