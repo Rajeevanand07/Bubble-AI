@@ -6,6 +6,10 @@
   }
 }
 
+html,body,#root{
+  height: 100%;
+}
+
 .animated-shape {
   position: absolute;
   border-radius: 20%;
