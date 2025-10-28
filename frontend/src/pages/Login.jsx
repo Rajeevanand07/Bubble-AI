@@ -1,9 +1,11 @@
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { loginUser } from "../actions/userAction";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
-
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -11,15 +13,7 @@ const Login = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
-    await axios.post("http://localhost:3000/api/auth/login", data,{
-        withCredentials: true
-    })
-    .then((res) => {
-      console.log(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
+    dispatch(loginUser(data));
     reset();
   };
 

@@ -1,9 +1,11 @@
 
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { registerUser } from '../actions/userAction';
 
 const Signup = () => {
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -18,16 +20,8 @@ const Signup = () => {
             lastName: data.lastName
         },
         password: data.password
-    }
-    await axios.post("http://localhost:3000/api/auth/register", strData,{
-        withCredentials: true
-    })
-    .then((res) => {
-      console.log(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    })
+    };
+    dispatch(registerUser(strData));
     reset();
   };
 
