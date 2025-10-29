@@ -1,4 +1,5 @@
 const ChatModel = require("../models/chat.model");
+const Message = require("../models/message.model") 
 
 async function createChat(req, res) {
   const { title } = req.body;
@@ -16,6 +17,26 @@ async function createChat(req, res) {
   });
 }
 
+async function getChats(req, res) {
+    const user = req.user;
+    const chats = await ChatModel.find({ user: user._id });
+    return res.status(200).json({
+        message: "Chats fetched successfully",
+        chats,
+    });
+}
+
+async function getMessagesFromChat(req,res){
+  const chatId = req.query;
+  const messages = await Message.find({chat:chatId.chat})
+  return res.status(200).json({
+    message:"all messages",
+    messages
+  })
+}
+
 module.exports = {
   createChat,
+  getChats,
+  getMessagesFromChat
 };

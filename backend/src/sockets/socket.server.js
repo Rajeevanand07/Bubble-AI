@@ -10,7 +10,8 @@ const messageModel = require("../models/message.model");
 function initSocketServer(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: "*",
+      origin: "http://localhost:5173",
+      credentials: true,
     },
   });
 
@@ -24,7 +25,6 @@ function initSocketServer(httpServer) {
 
     try {
       const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
-
       const user = await userModel.findById(decoded.id);
       socket.user = user;
       next();
