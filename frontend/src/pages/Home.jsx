@@ -5,9 +5,19 @@ import Card from "../components/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { asyncSetMessages } from "../actions/messageAction";
 
+// Typing indicator component
+const TypingIndicator = () => (
+  <div className="flex space-x-1 p-3 bg-[#10101053] text-white self-start rounded-4xl max-w-xs">
+    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+  </div>
+);
+
 const Home = () => {
   const [socket, setSocket] = useState(null);
   const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const { currentChat } = useSelector((state) => state.chats);
   const { messages } = useSelector((state) => state.messages);
   const dispatch = useDispatch();
@@ -19,6 +29,7 @@ const Home = () => {
         content: inputValue,
       });
       setInputValue("");
+      setIsTyping(true);
       dispatch(asyncSetMessages(currentChat));
     }
   };
@@ -39,7 +50,9 @@ useEffect(() => {
   if (!socket) return;
 
   const handleAIResponse = (data) => {
-    dispatch(asyncSetMessages(currentChat));
+    dispatch(asyncSetMessages(currentChat)).then(() => {
+      setIsTyping(false);
+    });
   };
 
   socket.on("ai-response", handleAIResponse);
@@ -79,6 +92,7 @@ useEffect(() => {
                     {message.content}
                   </div>
                 ))}
+                {isTyping && <TypingIndicator />}
               </div>
             </div>
           </div>

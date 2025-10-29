@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { registerUser } from '../actions/userAction';
+import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
     register,
@@ -21,8 +23,12 @@ const Signup = () => {
         },
         password: data.password
     };
-    dispatch(registerUser(strData));
-    reset();
+    const result = await dispatch(registerUser(strData));
+    if (result?.success) {
+        reset();
+        navigate("/", { replace: true });
+        window.location.reload(); // This will force a full page reload
+    }
   };
 
   return (
