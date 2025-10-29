@@ -1,7 +1,13 @@
-import { useState } from "react";
-import { BsLayoutSidebar, BsPencilSquare, BsX, BsChatDots } from "react-icons/bs";
-import { useDispatch } from "react-redux";
-import { createChat } from "../actions/chatAction";
+import { useEffect, useState } from "react";
+import {
+  BsLayoutSidebar,
+  BsPencilSquare,
+  BsX,
+  BsChatDots,
+} from "react-icons/bs";
+import { useDispatch, useSelector } from "react-redux";
+import { createChat, getChats, getCurrentUserChat } from "../actions/chatAction";
+import { asyncSetMessages } from "../actions/messageAction";
 
 const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
   const [title, setTitle] = useState("");
@@ -19,7 +25,7 @@ const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
       <div className="bg-[#1e1e1e] rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-black">New Chat</h2>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-400 hover:text-white"
             disabled={isLoading}
@@ -54,7 +60,7 @@ const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
               disabled={isLoading}
               className="bg-gradient-to-r from-[#096FFC] to-[#05C7F2] cursor-pointer text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
-              {isLoading ? 'Creating...' : 'Create Chat'}
+              {isLoading ? "Creating..." : "Create Chat"}
             </button>
           </div>
         </form>
@@ -64,13 +70,15 @@ const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
 };
 
 const Sidebar = () => {
-  // const {chats} = useSelector((state) => state.chats);
-  const [chats, setChats] = useState([]);
+  const { chats,currentChat } = useSelector((state) => state.chats);
   const dispatch = useDispatch();
   const [isExpanded, setIsExpanded] = useState(true);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
+  useEffect(() => {
+    dispatch(getChats());
+  }, []);
 
   const toggleSidebar = () => {
     setIsExpanded(!isExpanded);
@@ -88,6 +96,15 @@ const Sidebar = () => {
     }
   };
 
+  const handleChatClick = async (chatId) => {
+    try {
+      dispatch(asyncSetMessages(chatId));
+      dispatch(getCurrentUserChat(chatId));
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
   return (
     <div
       className={`h-screen border-r-[1.5px] border-[#635c5c80] py-10 px-6 transition-all duration-300 ${
@@ -96,10 +113,14 @@ const Sidebar = () => {
     >
       <div
         className={`flex ${
-          isExpanded ? "justify-between items-center" : "flex-col items-center gap-8"
+          isExpanded
+            ? "justify-between items-center"
+            : "flex-col items-center gap-8"
         }`}
       >
-        <div className={`flex items-center gap-2 ${isExpanded ? "order-2" : ""}`}>
+        <div
+          className={`flex items-center gap-2 ${isExpanded ? "order-2" : ""}`}
+        >
           <BsLayoutSidebar
             className="text-2xl cursor-pointer hover:text-gray-300 transition-colors"
             onClick={toggleSidebar}
@@ -112,7 +133,9 @@ const Sidebar = () => {
           }`}
         >
           <BsPencilSquare className="text-2xl" />
-          {isExpanded && <span className="text-nowrap pl-3 text-xl">New Chat</span>}
+          {isExpanded && (
+            <span className="text-nowrap pl-3 text-xl">New Chat</span>
+          )}
         </div>
       </div>
 
@@ -123,16 +146,21 @@ const Sidebar = () => {
             <BsChatDots className="text-xl" />
             <h3 className="text-lg font-medium">Chats</h3>
           </div>
-          
+
           <div className="space-y-1 max-h-[calc(100vh-250px)] overflow-y-auto">
-              {chats.map((chat) => (
-                <div
-                  key={chat._id}
-                  className="p-3 transition-all duration-300 ease-in-out hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-3"
-                >
-                  <span className="truncate capitalize text-xl">{chat.title}</span>
-                </div>
-              ))}
+            {chats.map((chat) => (
+              <div
+                key={chat._id}
+                onClick={() => handleChatClick(chat._id)}
+                className={`p-3 transition-all duration-300 ease-in-out hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-3 ${
+                  currentChat === chat._id ? "bg-gray-800" : ""
+                }`}
+              >
+                <span className="truncate capitalize text-xl">
+                  {chat.title}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}

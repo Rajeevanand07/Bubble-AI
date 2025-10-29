@@ -1,9 +1,9 @@
-import { addMessage, setMessages } from "../reducers/messageSlice";
+import { setMessages } from "../reducers/messageSlice";
 import axios from "../api/axiosConfig";
 
-export const getMessages = () => async (dispatch) => {
+export const asyncSetMessages = (chatId) => async (dispatch) => {
     try {
-        const { data } = await axios.get(`/api/message`, {
+        const { data } = await axios.get(`/api/chat/messages?chat=${chatId}`,{
             withCredentials: true
         });
         dispatch(setMessages(data.messages));
@@ -12,6 +12,3 @@ export const getMessages = () => async (dispatch) => {
     }
 };
 
-export const addMessageToChat = (message) => (dispatch) => {
-    dispatch(addMessage(message));
-};
