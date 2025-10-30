@@ -8,6 +8,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { createChat, getChats, getCurrentUserChat } from "../actions/chatAction";
 import { asyncSetMessages } from "../actions/messageAction";
+import { useNavigate } from "react-router-dom";
 
 const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
   const [title, setTitle] = useState("");
@@ -75,9 +76,12 @@ const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
     dispatch(getChats());
+    console.log(chats.length);
   }, []);
 
   const toggleSidebar = () => {
@@ -85,14 +89,19 @@ const Sidebar = () => {
   };
 
   const handleNewChat = async (title) => {
-    try {
-      setIsCreating(true);
-      dispatch(createChat(title));
-    } catch (error) {
-      console.error("Error creating chat:", error);
-    } finally {
-      setIsCreating(false);
-      setShowNewChatPopup(false);
+    if (user !== null) {
+      try {
+        setIsCreating(true);
+        dispatch(createChat(title));
+      } catch (error) {
+        console.error("Error creating chat:", error);
+      } finally {
+        setIsCreating(false);
+        setShowNewChatPopup(false);
+      }
+    }
+    else {
+      navigate("/login");
     }
   };
 
@@ -148,7 +157,7 @@ const Sidebar = () => {
           </div>
 
           <div className="space-y-1 max-h-[calc(100vh-250px)] overflow-y-auto">
-            {chats.map((chat) => (
+            {chats !== null && chats.map((chat) => (
               <div
                 key={chat._id}
                 onClick={() => handleChatClick(chat._id)}
@@ -160,7 +169,7 @@ const Sidebar = () => {
                   {chat.title}
                 </span>
               </div>
-            ))}
+            )).reverse()}
           </div>
         </div>
       )}

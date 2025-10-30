@@ -9,8 +9,11 @@ const messageSlice = createSlice({
         setMessages: (state, action) => {
             state.messages = action.payload;
         },
+        clearMessages: (state) => {
+            state.messages = [];  // This will clear all messages
+        },
     },
 });
 
-export const { setMessages } = messageSlice.actions;
+export const { setMessages, clearMessages } = messageSlice.actions;
 export default messageSlice.reducer;

@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import Card from "../components/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { asyncSetMessages } from "../actions/messageAction";
+import { useNavigate } from "react-router-dom";
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -20,7 +21,11 @@ const Home = () => {
   const [isTyping, setIsTyping] = useState(false);
   const { currentChat } = useSelector((state) => state.chats);
   const { messages } = useSelector((state) => state.messages);
+  const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const showWelcomeScreen = !currentChat || messages.length === 0;
   
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -30,7 +35,12 @@ const Home = () => {
       });
       setInputValue("");
       setIsTyping(true);
-      dispatch(asyncSetMessages(currentChat));
+      if (user !== null) {
+        dispatch(asyncSetMessages(currentChat));
+      }
+      else {
+        navigate("/login");
+      }
     }
   };
 
@@ -44,7 +54,7 @@ const Home = () => {
   return () => {
     tempSocket.disconnect();
   };
-}, []); // Empty dependency array means this runs once on mount
+}, []); 
 
 useEffect(() => {
   if (!socket) return;
@@ -66,7 +76,7 @@ useEffect(() => {
   return (
     <div className="flex min-h-[90vh] items-center">
       <div className="flex-1 p-4 flex flex-col items-center justify-center">
-        {messages.length === 0 ? (
+        {showWelcomeScreen ? (
           <div className="w-full max-w-5xl text-center">
             <h1 className="text-6xl font-bold my-20">What can I help with?</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

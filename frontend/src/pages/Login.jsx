@@ -19,7 +19,6 @@ const Login = () => {
     if (result?.success) {
         reset();
         navigate("/", { replace: true });
-        window.location.reload(); // This will force a full page reload
     }
 };
 
