@@ -56,12 +56,19 @@ async function loginUser(req, res) {
 }
 
 async function logoutUser(req, res) {
+  console.log("logout");
   res.clearCookie("token");
   return res.status(200).json({ message: "User logged out successfully" });
+}
+
+async function getCurrentUser(req, res) {
+  const user = await userModel.findById(req.user);
+  return res.status(200).json({ message: "User fetched successfully", user });
 }
 
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  getCurrentUser,
 };
