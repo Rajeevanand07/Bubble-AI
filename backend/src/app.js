@@ -13,14 +13,18 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieparser());
-app.use(express.static(path.join(__dirname, '../public')))
 
 app.use('/api/auth',authRouter)
 app.use('/api/chat',chatRouter)
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'))
-})
+app.use(express.static(path.join(__dirname, '../public')))
+
+app.get('*', (req, res, next) => {
+    if (req.url.startsWith('/api/')) {
+        return next();
+    }
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 
 module.exports = app
