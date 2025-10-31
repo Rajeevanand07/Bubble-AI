@@ -61,7 +61,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const tempSocket = io("http://localhost:3000", {
+    const tempSocket = io("https://bubble-ai-z0vn.onrender.com", {
       withCredentials: true,
     });
 
