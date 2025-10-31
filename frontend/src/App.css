@@ -65,7 +65,7 @@ html,body,#root{
   top: -30%;
   left: 0%;
   rotate: 20deg;
-  animation: move 5s infinite alternate ease-in-out;
+  animation: move 3s infinite alternate ease-in-out;
 }
 
 .shape2 {
@@ -75,7 +75,7 @@ html,body,#root{
   top: -30%;
   left: 70%;
   rotate: -10deg;
-  animation: move 7s infinite alternate ease-in-out -5s;
+  animation: move 5s infinite alternate ease-in-out -5s;
 }
 
 .shape3 {
@@ -84,7 +84,7 @@ html,body,#root{
   background: #096FFC;
   top: -30%;
   left: 30%;
-  animation: move 10s infinite alternate ease-in-out -10s;
+  animation: move 7s infinite alternate ease-in-out -10s;
 }
 
 @keyframes move {

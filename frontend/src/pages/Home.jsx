@@ -5,6 +5,9 @@ import Card from "../components/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { asyncSetMessages } from "../actions/messageAction";
 import { useNavigate } from "react-router-dom";
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -88,18 +91,59 @@ useEffect(() => {
           </div>
         ) : (
            <div className="h-[70vh] overflow-auto pb-20 flex flex-col items-center gap-4 w-full">
-            <div className="w-5xl">
+            <div className="lg:w-3xl xl:w-5xl">
               <div className="flex flex-col gap-4">
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`px-8 py-3 text-2xl rounded-4xl max-w-2xl break-all ${
+                    className={`px-8 py-3 text-xl lg:text-2xl rounded-4xl md:max-w-xl lg:max-w-xl break-all ${
                       message.role === "user"
                         ? "bg-gradient-to-r from-[#096FFC] to-[#05C7F2] text-white self-end"
                         : "bg-[#10101053] text-white self-start"
                     }`}
                   >
-                    {message.content}
+                    {message.role === "user" ? (
+                      message.content
+                    ) : (
+                      <div className="prose prose-invert max-w-none 
+                        prose-p:my-4 prose-p:leading-relaxed
+                        prose-headings:mt-8 prose-headings:mb-4
+                        prose-h1:text-4xl prose-h1:font-extrabold prose-h1:mb-6
+                        prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
+                        prose-h3:text-2xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
+                        prose-ul:my-4 prose-ol:my-4 prose-li:my-2 prose-li:leading-relaxed
+                        prose-blockquote:border-l-4 prose-blockquote:border-blue-400 prose-blockquote:pl-4 prose-blockquote:my-6
+                        prose-hr:my-8 prose-hr:border-gray-600
+                        prose-pre:bg-gray-800 prose-pre:p-4 prose-pre:rounded-lg prose-pre:my-6
+                        prose-code:bg-gray-700 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                        prose-strong:text-blue-300 prose-strong:font-semibold
+                        prose-a:text-blue-400 hover:prose-a:underline
+                        prose-img:rounded-lg prose-img:my-6
+                      ">
+                        <ReactMarkdown 
+                          rehypePlugins={[rehypeHighlight]}
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="text-5xl font-extrabold mt-8 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-4xl font-bold mt-7 mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" {...props} />,
+                            p: ({node, ...props}) => <p className="my-4 leading-relaxed" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc pl-6 my-4 space-y-2" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-6 my-4 space-y-2" {...props} />,
+                            li: ({node, ...props}) => <li className="my-2 leading-relaxed" {...props} />,
+                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-400 pl-4 my-6 text-gray-300 italic" {...props} />,
+                            hr: ({node, ...props}) => <hr className="my-8 border-gray-600" {...props} />,
+                            code: ({node, inline, className, children, ...props}) => {
+                              if (inline) {
+                                return <code className="bg-gray-700 px-1.5 py-0.5 rounded text-sm" {...props} />
+                              }
+                              return <code className={className} {...props} />
+                            },
+                            pre: ({node, ...props}) => <pre className="p-4 rounded-lg my-5 overflow-x-auto" {...props} />
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isTyping && <TypingIndicator />}

@@ -6,7 +6,11 @@ import {
   BsChatDots,
 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
-import { createChat, getChats, getCurrentUserChat } from "../actions/chatAction";
+import {
+  createChat,
+  getChats,
+  getCurrentUserChat,
+} from "../actions/chatAction";
 import { asyncSetMessages } from "../actions/messageAction";
 import { useNavigate } from "react-router-dom";
 
@@ -71,9 +75,9 @@ const NewChatPopup = ({ onClose, onSubmit, isLoading }) => {
 };
 
 const Sidebar = () => {
-  const { chats,currentChat } = useSelector((state) => state.chats);
+  const { chats, currentChat } = useSelector((state) => state.chats);
   const dispatch = useDispatch();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
@@ -81,7 +85,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     dispatch(getChats());
-    console.log(chats.length);
+    console.log(user);
   }, []);
 
   const toggleSidebar = () => {
@@ -99,8 +103,7 @@ const Sidebar = () => {
         setIsCreating(false);
         setShowNewChatPopup(false);
       }
-    }
-    else {
+    } else {
       navigate("/login");
     }
   };
@@ -116,70 +119,95 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-screen border-r-[1.5px] border-[#635c5c80] py-10 px-6 transition-all duration-300 ${
+      className={`h-screen flex flex-col border-r-[1.5px] border-[#635c5c80] py-10 px-6 transition-all duration-300 ${
         isExpanded ? "w-100" : "w-16"
       }`}
-    >
-      <div
-        className={`flex ${
-          isExpanded
-            ? "justify-between items-center"
-            : "flex-col items-center gap-8"
-        }`}
-      >
+    > 
+      <div>
         <div
-          className={`flex items-center gap-2 ${isExpanded ? "order-2" : ""}`}
-        >
-          <BsLayoutSidebar
-            className="text-2xl cursor-pointer hover:text-gray-300 transition-colors"
-            onClick={toggleSidebar}
-          />
-        </div>
-        <div
-          onClick={() => setShowNewChatPopup(true)}
-          className={`flex items-center justify-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
-            isExpanded ? "order-1" : ""
+          className={`flex ${
+            isExpanded
+              ? "justify-between items-center"
+              : "flex-col items-center gap-8"
           }`}
         >
-          <BsPencilSquare className="text-2xl" />
-          {isExpanded && (
-            <span className="text-nowrap pl-3 text-xl">New Chat</span>
-          )}
+          <div
+            className={`flex items-center gap-2 ${isExpanded ? "order-2" : ""}`}
+          >
+            <BsLayoutSidebar
+              className="text-2xl cursor-e-resize hover:text-gray-300 transition-colors"
+              onClick={toggleSidebar}
+            />
+          </div>
+          <div
+            onClick={() => setShowNewChatPopup(true)}
+            className={`flex items-center justify-center gap-2 cursor-pointer p-2 rounded-lg transition-colors ${
+              isExpanded ? "order-1" : ""
+            }`}
+          >
+            <BsPencilSquare className="text-2xl" />
+            {isExpanded && (
+              <span className="text-nowrap pl-3 text-xl">New Chat</span>
+            )}
+          </div>
         </div>
+
+        {/* Chats List */}
+        {isExpanded && (
+          <div className="mt-8">
+            <div className="flex items-center gap-2 text-gray-400 mb-4 px-2">
+              <BsChatDots className="text-xl" />
+              <h3 className="text-lg font-medium">Chats</h3>
+            </div>
+
+            <div className="space-y-1 max-h-[calc(100vh-250px)] overflow-y-auto">
+              {chats !== null &&
+                chats
+                  .map((chat) => (
+                    <div
+                      key={chat._id}
+                      onClick={() => handleChatClick(chat._id)}
+                      className={`p-3 transition-all duration-300 ease-in-out hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-3 ${
+                        currentChat === chat._id ? "bg-gray-800" : ""
+                      }`}
+                    >
+                      <span className="truncate capitalize text-xl">
+                        {chat.title}
+                      </span>
+                    </div>
+                  ))
+                  .reverse()}
+            </div>
+          </div>
+        )}
+
+        {showNewChatPopup && (
+          <NewChatPopup
+            onClose={() => !isCreating && setShowNewChatPopup(false)}
+            onSubmit={handleNewChat}
+            isLoading={isCreating}
+          />
+        )}
       </div>
 
-      {/* Chats List */}
-      {isExpanded && (
-        <div className="mt-8">
-          <div className="flex items-center gap-2 text-gray-400 mb-4 px-2">
-            <BsChatDots className="text-xl" />
-            <h3 className="text-lg font-medium">Chats</h3>
+      {user && (
+        <div
+          className={`mt-auto pt-4 border-t border-gray-700 flex ${
+            isExpanded ? "items-center gap-3" : "flex-col items-center"
+          }`}
+        >
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg">
+            {user?.fullName?.firstName.charAt(0).toUpperCase() || "U"}
           </div>
-
-          <div className="space-y-1 max-h-[calc(100vh-250px)] overflow-y-auto">
-            {chats !== null && chats.map((chat) => (
-              <div
-                key={chat._id}
-                onClick={() => handleChatClick(chat._id)}
-                className={`p-3 transition-all duration-300 ease-in-out hover:bg-gray-800 rounded-lg cursor-pointer flex items-center gap-3 ${
-                  currentChat === chat._id ? "bg-gray-800" : ""
-                }`}
-              >
-                <span className="truncate capitalize text-xl">
-                  {chat.title}
-                </span>
-              </div>
-            )).reverse()}
-          </div>
+          {isExpanded && (
+            <div>
+              <p className="text-white font-medium text-sm">
+                {user?.fullName?.firstName || "User"}
+              </p>
+              <p className="text-gray-400 text-xs">{user?.email || ""}</p>
+            </div>
+          )}
         </div>
-      )}
-
-      {showNewChatPopup && (
-        <NewChatPopup
-          onClose={() => !isCreating && setShowNewChatPopup(false)}
-          onSubmit={handleNewChat}
-          isLoading={isCreating}
-        />
       )}
     </div>
   );

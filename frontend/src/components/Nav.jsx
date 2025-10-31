@@ -36,8 +36,8 @@ const Nav = () => {
   );
 
   return (
-    <nav className="flex justify-between items-center px-10 py-6">
-        <Link to="/" className="text-3xl flex justify-center items-center gap-3 font-black"><div className='w-8'><img src={logo} alt="" /></div>BUBBLE</Link>
+    <nav className="flex justify-between items-center md:px-10 px-5 py-6">
+        <Link to="/" className="md:text-3xl text-xl flex justify-center items-center gap-3 font-black"><div className='w-8'><img src={logo} alt="" /></div>BUBBLE</Link>
         <div className="flex items-center gap-6">
             {user !== null ? (
               <div className='cursor-pointer h-[50%] overflow-hidden' onClick={handleLogout}>
