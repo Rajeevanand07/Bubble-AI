@@ -13,13 +13,13 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieparser());
-app.use(express.static(path.join(__dirname, '../public')))
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
 app.use('/api/auth',authRouter)
 app.use('/api/chat',chatRouter)
 
-app.get('/:path(*)', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
 });
 
 
