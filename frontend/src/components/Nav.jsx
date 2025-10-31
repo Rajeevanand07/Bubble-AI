@@ -10,14 +10,12 @@ const Nav = () => {
   const {user} = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  console.log(user);
 
   useEffect(() => {
     dispatch(getCurrentUser());
   }, []);
 
   const handleLogout = () => {
-    console.log("hey");
     const result = dispatch(logoutUser());
      if (result?.success) {
         navigate("/");

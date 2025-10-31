@@ -5,16 +5,26 @@ import Card from "../components/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { asyncSetMessages } from "../actions/messageAction";
 import { useNavigate } from "react-router-dom";
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
+import { toast } from "react-toastify";
 
 // Typing indicator component
 const TypingIndicator = () => (
   <div className="flex space-x-1 p-3 bg-[#10101053] text-white self-start rounded-4xl max-w-xs">
-    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+    <div
+      className="w-2 h-2 bg-white rounded-full animate-bounce"
+      style={{ animationDelay: "0ms" }}
+    ></div>
+    <div
+      className="w-2 h-2 bg-white rounded-full animate-bounce"
+      style={{ animationDelay: "150ms" }}
+    ></div>
+    <div
+      className="w-2 h-2 bg-white rounded-full animate-bounce"
+      style={{ animationDelay: "300ms" }}
+    ></div>
   </div>
 );
 
@@ -29,52 +39,55 @@ const Home = () => {
   const navigate = useNavigate();
 
   const showWelcomeScreen = !currentChat || messages.length === 0;
-  
+
   const handleSend = () => {
     if (inputValue.trim()) {
-      socket.emit("ai-message", {
-        chat: currentChat,
-        content: inputValue,
-      });
-      setInputValue("");
-      setIsTyping(true);
       if (user !== null) {
-        dispatch(asyncSetMessages(currentChat));
-      }
-      else {
+        if (currentChat !== null) {
+          socket.emit("ai-message", {
+            chat: currentChat,
+            content: inputValue,
+          });
+          setInputValue("");
+          setIsTyping(true);
+          dispatch(asyncSetMessages(currentChat));
+        } else {
+          toast("Please select a chat");
+        }
+      } else {
         navigate("/login");
       }
     }
   };
 
   useEffect(() => {
-  const tempSocket = io("http://localhost:3000", {
-    withCredentials: true
-  });
-  
-  setSocket(tempSocket);
-
-  return () => {
-    tempSocket.disconnect();
-  };
-}, []); 
-
-useEffect(() => {
-  if (!socket) return;
-
-  const handleAIResponse = (data) => {
-    dispatch(asyncSetMessages(currentChat)).then(() => {
-      setIsTyping(false);
+    const tempSocket = io("http://localhost:3000", {
+      withCredentials: true,
     });
-  };
 
-  socket.on("ai-response", handleAIResponse);
+    setSocket(tempSocket);
 
-  // Clean up the event listener when the effect re-runs
-  return () => {
-    socket.off("ai-response", handleAIResponse);
-  };
-}, [socket, currentChat, dispatch]); // Now this effect only re-runs when these deps change
+    return () => {
+      tempSocket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleAIResponse = (data) => {
+      dispatch(asyncSetMessages(currentChat)).then(() => {
+        setIsTyping(false);
+      });
+    };
+
+    socket.on("ai-response", handleAIResponse);
+
+    // Clean up the event listener when the effect re-runs
+    return () => {
+      socket.off("ai-response", handleAIResponse);
+    };
+  }, [socket, currentChat, dispatch]); // Now this effect only re-runs when these deps change
 
   return (
     <div className="flex min-h-[90vh] items-center">
@@ -82,7 +95,7 @@ useEffect(() => {
         {showWelcomeScreen ? (
           <div className="w-full max-w-5xl text-center">
             <h1 className="text-6xl font-bold my-20">What can I help with?</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="max-sm:hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <Card text="Suggest beautiful places to see on an upcoming road trip" />
               <Card text="Briefly summarize this concept: urban planning" />
               <Card text="Brainstorm team bonding activities for our work retreat" />
@@ -90,8 +103,8 @@ useEffect(() => {
             </div>
           </div>
         ) : (
-           <div className="h-[70vh] overflow-auto pb-20 flex flex-col items-center gap-4 w-full">
-            <div className="lg:w-3xl xl:w-5xl">
+          <div className="h-[70vh] overflow-auto pb-20 flex flex-col items-center gap-4 w-full">
+            <div className="sm:w-full xl:w-5xl">
               <div className="flex flex-col gap-4">
                 {messages.map((message, index) => (
                   <div
@@ -105,7 +118,8 @@ useEffect(() => {
                     {message.role === "user" ? (
                       message.content
                     ) : (
-                      <div className="prose prose-invert max-w-none 
+                      <div
+                        className="prose prose-invert max-w-none 
                         prose-p:my-4 prose-p:leading-relaxed
                         prose-headings:mt-8 prose-headings:mb-4
                         prose-h1:text-4xl prose-h1:font-extrabold prose-h1:mb-6
@@ -119,25 +133,73 @@ useEffect(() => {
                         prose-strong:text-blue-300 prose-strong:font-semibold
                         prose-a:text-blue-400 hover:prose-a:underline
                         prose-img:rounded-lg prose-img:my-6
-                      ">
-                        <ReactMarkdown 
+                      "
+                      >
+                        <ReactMarkdown
                           rehypePlugins={[rehypeHighlight]}
                           components={{
-                            h1: ({node, ...props}) => <h1 className="text-5xl font-extrabold mt-8 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="text-4xl font-bold mt-7 mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" {...props} />,
-                            p: ({node, ...props}) => <p className="my-4 leading-relaxed" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc pl-6 my-4 space-y-2" {...props} />,
-                            ol: ({node, ...props}) => <ol className="list-decimal pl-6 my-4 space-y-2" {...props} />,
-                            li: ({node, ...props}) => <li className="my-2 leading-relaxed" {...props} />,
-                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-400 pl-4 my-6 text-gray-300 italic" {...props} />,
-                            hr: ({node, ...props}) => <hr className="my-8 border-gray-600" {...props} />,
-                            code: ({node, inline, className, children, ...props}) => {
+                            h1: ({ node, ...props }) => (
+                              <h1
+                                className="text-5xl font-extrabold mt-8 mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300"
+                                {...props}
+                              />
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
+                                className="text-4xl font-bold mt-7 mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300"
+                                {...props}
+                              />
+                            ),
+                            p: ({ node, ...props }) => (
+                              <p className="my-4 leading-relaxed" {...props} />
+                            ),
+                            ul: ({ node, ...props }) => (
+                              <ul
+                                className="list-disc pl-6 my-4 space-y-2"
+                                {...props}
+                              />
+                            ),
+                            ol: ({ node, ...props }) => (
+                              <ol
+                                className="list-decimal pl-6 my-4 space-y-2"
+                                {...props}
+                              />
+                            ),
+                            li: ({ node, ...props }) => (
+                              <li className="my-2 leading-relaxed" {...props} />
+                            ),
+                            blockquote: ({ node, ...props }) => (
+                              <blockquote
+                                className="border-l-4 border-blue-400 pl-4 my-6 text-gray-300 italic"
+                                {...props}
+                              />
+                            ),
+                            hr: ({ node, ...props }) => (
+                              <hr className="my-8 border-gray-600" {...props} />
+                            ),
+                            code: ({
+                              node,
+                              inline,
+                              className,
+                              children,
+                              ...props
+                            }) => {
                               if (inline) {
-                                return <code className="bg-gray-700 px-1.5 py-0.5 rounded text-sm" {...props} />
+                                return (
+                                  <code
+                                    className="bg-gray-700 px-1.5 py-0.5 rounded text-sm"
+                                    {...props}
+                                  />
+                                );
                               }
-                              return <code className={className} {...props} />
+                              return <code className={className} {...props} />;
                             },
-                            pre: ({node, ...props}) => <pre className="p-4 rounded-lg my-5 overflow-x-auto" {...props} />
+                            pre: ({ node, ...props }) => (
+                              <pre
+                                className="p-4 rounded-lg my-5 overflow-x-auto"
+                                {...props}
+                              />
+                            ),
                           }}
                         >
                           {message.content}
@@ -161,12 +223,12 @@ useEffect(() => {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onKeyPress={(e) => e.key === "Enter" && handleSend()}
                 className="w-full p-4 pl-15 pr-20 rounded-full bg-gray-800 text-white border text-2xl border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ask anything"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <button 
+                <button
                   type="button"
                   onClick={handleSend}
                   className="p-3 rounded-full hover:bg-gray-700"

@@ -86,6 +86,7 @@ const Sidebar = () => {
   useEffect(() => {
     dispatch(getChats());
     console.log(user);
+    console.log(currentChat);
   }, []);
 
   const toggleSidebar = () => {
@@ -93,6 +94,7 @@ const Sidebar = () => {
   };
 
   const handleNewChat = async (title) => {
+    
     if (user !== null) {
       try {
         setIsCreating(true);
